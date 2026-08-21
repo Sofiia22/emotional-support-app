@@ -1,3 +1,5 @@
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
@@ -14,19 +16,24 @@ import Animated, {
 import PlekeiLogo from "@/assets/logo/plekei.svg";
 import { LanguageSelector } from "@/components/common/LanguageSelector";
 import { AppText, SoftButton } from "@/components/ui";
+import { useApp } from "@/shared/state/AppProvider";
 
 const featherImage = require("../../assets/images/feather.png");
 
 export function WelcomeScreen() {
+  const router = useRouter();
+  const { copy } = useApp();
   const feather = useSharedValue(0);
 
-  feather.value = withRepeat(
-    withSequence(
-      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
-      withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
-    ),
-    -1,
-  );
+  useEffect(() => {
+    feather.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+    );
+  }, [feather]);
 
   const featherStyle = useAnimatedStyle(() => ({
     transform: [
@@ -43,7 +50,7 @@ export function WelcomeScreen() {
       <Animated.View entering={FadeIn.duration(1400)} style={styles.logoBlock}>
         <PlekeiLogo width={250} height={105} />
 
-        <AppText style={styles.tagline}>Cherish and Breathe</AppText>
+        <AppText style={styles.tagline}>{copy.common.tagline}</AppText>
       </Animated.View>
 
       <Animated.Image
@@ -57,10 +64,10 @@ export function WelcomeScreen() {
         entering={FadeIn.delay(800).duration(1400)}
         style={styles.textBlock}
       >
-        <AppText style={styles.title}>A gentle place for your heart.</AppText>
+        <AppText style={styles.title}>{copy.welcome.title}</AppText>
 
         <AppText style={styles.description}>
-          Breathe. Reflect. Pray. Grow.
+          {copy.welcome.description}
         </AppText>
       </Animated.View>
 
@@ -68,9 +75,21 @@ export function WelcomeScreen() {
         entering={FadeInUp.delay(1000).duration(900)}
         style={styles.actions}
       >
-        <SoftButton title="Get Started" />
-        <SoftButton title="Sign In" variant="secondary" />
+        <SoftButton
+          title={copy.welcome.getStarted}
+          onPress={() =>
+            router.push({ pathname: "/auth", params: { mode: "register" } })
+          }
+        />
+        <SoftButton
+          title={copy.welcome.signIn}
+          variant="secondary"
+          onPress={() =>
+            router.push({ pathname: "/auth", params: { mode: "login" } })
+          }
+        />
         <LanguageSelector />
+        <AppText style={styles.privacy}>{copy.welcome.privacy}</AppText>
       </Animated.View>
     </View>
   );
@@ -122,6 +141,9 @@ const styles = StyleSheet.create({
   },
   textBlock: {
     marginTop: 24,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
     alignItems: "center",
   },
   title: {
@@ -141,6 +163,17 @@ const styles = StyleSheet.create({
   },
   actions: {
     marginTop: 28,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
     gap: 14,
+  },
+  privacy: {
+    alignSelf: "center",
+    maxWidth: 310,
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#A58C80",
   },
 });

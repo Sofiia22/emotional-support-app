@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "emotional-support-app",
+    "name": "Plekai",
     "slug": "emotional-support-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -28,13 +28,18 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FFF8EF",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-notifications",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

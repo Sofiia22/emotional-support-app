@@ -1,30 +1,38 @@
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet } from "react-native";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/ui";
+import { languages } from "@/shared/i18n/translations";
+import { useApp } from "@/shared/state/AppProvider";
 
-const languages = [
-  { code: "en", label: "English", flag: "🇺🇸" },
-  { code: "uk", label: "Українська", flag: "🇺🇦" },
-  { code: "ru", label: "Русский", flag: "🇷🇺" },
-];
-
-export function LanguageSelector() {
+export function LanguageSelector({ compact = false }: { compact?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
+  const { language, setLanguage, copy } = useApp();
+  const selectedLanguage =
+    languages.find((item) => item.code === language) ?? languages[0];
 
   return (
     <>
-      <Pressable style={styles.trigger} onPress={() => setIsOpen(true)}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={copy.common.chooseLanguage}
+        style={[styles.trigger, compact && styles.compactTrigger]}
+        onPress={() => setIsOpen(true)}
+      >
         <AppText style={styles.triggerText}>
-          {selectedLanguage.flag} {selectedLanguage.label} ▾
+          {selectedLanguage.flag} {compact ? selectedLanguage.code.toUpperCase() : selectedLanguage.label} ▾
         </AppText>
       </Pressable>
 
-      <Modal transparent visible={isOpen} animationType="fade">
+      <Modal
+        transparent
+        visible={isOpen}
+        animationType="fade"
+        onRequestClose={() => setIsOpen(false)}
+      >
         <Pressable style={styles.overlay} onPress={() => setIsOpen(false)}>
-          <Pressable style={styles.sheet}>
-            <AppText style={styles.title}>Choose language</AppText>
+          <View style={styles.sheet}>
+            <AppText style={styles.title}>{copy.common.chooseLanguage}</AppText>
 
             {languages.map((language) => {
               const isSelected = language.code === selectedLanguage.code;
@@ -32,9 +40,12 @@ export function LanguageSelector() {
               return (
                 <Pressable
                   key={language.code}
+                  accessibilityRole="button"
+                  accessibilityLabel={language.label}
+                  accessibilityState={{ selected: isSelected }}
                   style={styles.option}
                   onPress={() => {
-                    setSelectedLanguage(language);
+                    setLanguage(language.code);
                     setIsOpen(false);
                   }}
                 >
@@ -46,7 +57,7 @@ export function LanguageSelector() {
                 </Pressable>
               );
             })}
-          </Pressable>
+          </View>
         </Pressable>
       </Modal>
     </>
@@ -67,6 +78,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#A67868",
   },
+  compactTrigger: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
   overlay: {
     flex: 1,
     justifyContent: "flex-end",
@@ -77,6 +92,11 @@ const styles = StyleSheet.create({
     padding: 22,
     borderRadius: 30,
     backgroundColor: "#FFF8EF",
+    shadowColor: "#5B4035",
+    shadowOpacity: 0.18,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
   },
   title: {
     marginBottom: 14,

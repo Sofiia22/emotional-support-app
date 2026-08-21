@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
@@ -23,40 +24,42 @@ export function SplashScreen() {
   const dotTwo = useSharedValue(0.3);
   const dotThree = useSharedValue(0.3);
 
-  feather.value = withRepeat(
-    withSequence(
-      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
-      withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
-    ),
-    -1,
-  );
+  useEffect(() => {
+    feather.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+    );
 
-  dotOne.value = withRepeat(
-    withSequence(
-      withTiming(1, { duration: 450 }),
-      withTiming(0.3, { duration: 450 }),
-      withDelay(900, withTiming(0.3, { duration: 1 })),
-    ),
-    -1,
-  );
+    dotOne.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 450 }),
+        withTiming(0.3, { duration: 450 }),
+        withDelay(900, withTiming(0.3, { duration: 1 })),
+      ),
+      -1,
+    );
 
-  dotTwo.value = withRepeat(
-    withSequence(
-      withTiming(0.3, { duration: 450 }),
-      withTiming(1, { duration: 450 }),
-      withTiming(0.3, { duration: 450 }),
-      withDelay(450, withTiming(0.3, { duration: 1 })),
-    ),
-    -1,
-  );
+    dotTwo.value = withRepeat(
+      withSequence(
+        withTiming(0.3, { duration: 450 }),
+        withTiming(1, { duration: 450 }),
+        withTiming(0.3, { duration: 450 }),
+        withDelay(450, withTiming(0.3, { duration: 1 })),
+      ),
+      -1,
+    );
 
-  dotThree.value = withRepeat(
-    withSequence(
-      withDelay(900, withTiming(1, { duration: 450 })),
-      withTiming(0.3, { duration: 450 }),
-    ),
-    -1,
-  );
+    dotThree.value = withRepeat(
+      withSequence(
+        withDelay(900, withTiming(1, { duration: 450 })),
+        withTiming(0.3, { duration: 450 }),
+      ),
+      -1,
+    );
+  }, [dotOne, dotThree, dotTwo, feather]);
 
   const featherStyle = useAnimatedStyle(() => ({
     transform: [

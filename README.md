@@ -1,6 +1,8 @@
-# Welcome to your Expo app 👋
+# Plekai — Emotional Support App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Plekai is a private, multilingual wellbeing app built with Expo and React Native. The current MVP includes onboarding, local demo authentication, mood check-ins, an editable private journal, a guided breathing timer, an offline reading library, support resources, local reminders, and English/Ukrainian/Russian localization.
+
+No AI service is connected. Profile, mood, journal, and activity data are stored locally on the device with AsyncStorage.
 
 ## Get started
 
@@ -16,41 +18,37 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+Then open it in Expo Go, an emulator, or the web preview.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Current product scope
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Splash and welcome experience
+- Local-only sign-up/sign-in demo flow
+- Three languages: English, Ukrainian, and Russian
+- Mood check-in and local progress counters
+- Daily mood history with one check-in per day
+- Private local journal with edit, delete, and export
+- Journal search across locally stored reflections
+- Offline supportive reading library with favorites
+- Guided one-minute 4–4–4 breathing exercise
+- Grounding exercise and support resources
+- Optional daily local reminders on iOS and Android
+- Manual support-region selection with verified official crisis/emergency sources
+- Local data export and wellbeing-data clearing controls
+- In-app privacy notice and release safety documentation
+- Automated tests for mood-history and reminder-time logic
+- Responsive navigation for iOS, Android, and web
 
-## Get a fresh project
+## Important safety note
 
-When you're ready, run:
+Plekai is a wellbeing tool. It is not medical care, therapy, or an emergency service. Emergency-number availability depends on the user's region.
 
-```bash
-npm run reset-project
-```
+## Development commands
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- `npm run web` — start the web app
+- `npm run ios` — start the iOS app
+- `npm run android` — start the Android app
+- `npm run lint` — run lint checks
+- `npx tsc --noEmit` — run TypeScript checks
 
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+The project uses file-based routing with Expo Router. Product code lives in `src/app`, `src/features`, `src/components`, and `src/shared`.
