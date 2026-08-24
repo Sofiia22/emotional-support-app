@@ -16,7 +16,7 @@ import { GrowingPlekaiMark } from "@/features/splash/GrowingPlekaiMark";
 const taglineImage = require("../../assets/logo/animated/tagline.png");
 const wordmarkImage = require("../../assets/logo/animated/wordmark.png");
 
-const GROWTH_DURATION_MS = 5000;
+const GROWTH_DURATION_MS = 10000;
 
 type SplashScreenProps = {
   isAppReady: boolean;

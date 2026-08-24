@@ -44,39 +44,39 @@ export function GrowingPlekaiMark({ reducedMotion }: GrowingPlekaiMarkProps) {
     }
 
     growth.value = withDelay(
-      300,
+      500,
       withTiming(1, {
-        duration: 2700,
+        duration: 5000,
         easing: Easing.bezier(0.2, 0.72, 0.26, 1),
       }),
     );
     topLeaf.value = withDelay(
-      2300,
+      4700,
       withTiming(1, {
-        duration: 700,
+        duration: 1500,
         easing: Easing.bezier(0.2, 0.72, 0.26, 1),
       }),
     );
     arcs.value = withDelay(
-      2900,
+      6000,
       withTiming(1, {
-        duration: 900,
+        duration: 2000,
         easing: Easing.inOut(Easing.ease),
       }),
     );
     butterfly.value = withDelay(
-      3800,
+      8000,
       withTiming(1, {
-        duration: 800,
+        duration: 1400,
         easing: Easing.bezier(0.2, 0.72, 0.26, 1),
       }),
     );
     glow.value = withDelay(
-      1300,
-      withTiming(0.52, { duration: 2200, easing: Easing.out(Easing.ease) }),
+      2000,
+      withTiming(0.52, { duration: 4500, easing: Easing.out(Easing.ease) }),
     );
     idle.value = withDelay(
-      5100,
+      10100,
       withRepeat(
         withSequence(
           withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
@@ -87,7 +87,7 @@ export function GrowingPlekaiMark({ reducedMotion }: GrowingPlekaiMarkProps) {
       ),
     );
     butterflyIdle.value = withDelay(
-      5100,
+      10100,
       withRepeat(
         withSequence(
           withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
