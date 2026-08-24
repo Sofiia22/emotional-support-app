@@ -11,9 +11,10 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
-import PlekeiLogo from "@/assets/logo/plekei.svg";
-import { AppText } from "@/components/ui";
 import { GrowingPlekaiMark } from "@/features/splash/GrowingPlekaiMark";
+
+const taglineImage = require("../../assets/logo/animated/tagline.png");
+const wordmarkImage = require("../../assets/logo/animated/wordmark.png");
 
 const GROWTH_DURATION_MS = 2600;
 
@@ -79,11 +80,16 @@ export function SplashScreen({ isAppReady, onFinish }: SplashScreenProps) {
       <View style={styles.content}>
         <GrowingPlekaiMark reducedMotion={reducedMotion} />
 
-        <View style={styles.wordmark}>
-          <PlekeiLogo width={194} height={78} />
-        </View>
-        <AppText style={styles.tagline}>Cherish and Breathe</AppText>
-        <View style={styles.goldAccent} />
+        <Animated.Image
+          source={wordmarkImage}
+          resizeMode="contain"
+          style={styles.wordmark}
+        />
+        <Animated.Image
+          source={taglineImage}
+          resizeMode="contain"
+          style={styles.tagline}
+        />
       </View>
     </Animated.View>
   );
@@ -102,28 +108,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingBottom: 30,
+    paddingBottom: 22,
   },
   wordmark: {
-    height: 58,
-    marginTop: -4,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
+    width: 252,
+    height: 89,
+    marginTop: -19,
   },
   tagline: {
-    marginTop: 8,
-    color: "#9A756B",
-    fontSize: 15,
-    letterSpacing: 3.4,
-    lineHeight: 22,
-    textAlign: "center",
-  },
-  goldAccent: {
-    width: 44,
-    height: 1,
-    marginTop: 18,
-    backgroundColor: "#C9A86A",
-    opacity: 0.7,
+    width: 260,
+    height: 87,
+    marginTop: -25,
   },
 });
