@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,7 +14,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { LanguageSelector } from "@/components/common/LanguageSelector";
 import { AppText, SoftButton } from "@/components/ui";
+import { GrowingPlekaiMark } from "@/features/splash/GrowingPlekaiMark";
 import { useApp } from "@/shared/state/AppProvider";
+
+const taglineImage = require("../../assets/logo/animated/tagline.png");
+const wordmarkImage = require("../../assets/logo/animated/wordmark.png");
 
 type AuthMode = "forgot" | "login" | "register";
 
@@ -93,9 +98,25 @@ export function AuthScreen({ initialMode }: { initialMode: AuthMode }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.brandBlock}>
-            <AppText style={styles.brand}>{copy.common.brand}</AppText>
-            <AppText style={styles.tagline}>{copy.common.tagline}</AppText>
+          <View
+            accessibilityLabel={`${copy.common.brand}. ${copy.common.tagline}.`}
+            style={styles.brandBlock}
+          >
+            <View style={styles.markViewport}>
+              <View style={styles.markScale}>
+                <GrowingPlekaiMark reducedMotion />
+              </View>
+            </View>
+            <Image
+              source={wordmarkImage}
+              resizeMode="contain"
+              style={styles.wordmark}
+            />
+            <Image
+              source={taglineImage}
+              resizeMode="contain"
+              style={styles.brandTagline}
+            />
           </View>
 
           <View style={styles.card}>
@@ -282,22 +303,34 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   brandBlock: {
-    marginTop: 10,
-    marginBottom: 16,
+    marginTop: 4,
+    marginBottom: 12,
     alignItems: "center",
   },
-  brand: {
-    fontFamily: "serif",
-    fontSize: 40,
-    fontWeight: "700",
-    color: "#6F5548",
+  markViewport: {
+    width: 145,
+    height: 137,
+    overflow: "hidden",
   },
-  tagline: {
-    marginTop: -4,
-    fontSize: 11,
-    letterSpacing: 2.4,
-    textTransform: "uppercase",
-    color: "#B28B7E",
+  markScale: {
+    position: "absolute",
+    left: 3,
+    top: 0,
+    width: 330,
+    height: 320,
+    transform: [{ scale: 0.42 }],
+    transformOrigin: "top left",
+  },
+  wordmark: {
+    width: 170,
+    height: 60,
+    marginTop: -5,
+  },
+  brandTagline: {
+    width: 176,
+    height: 58,
+    marginTop: -26,
+    marginBottom: -17,
   },
   card: {
     width: "100%",
