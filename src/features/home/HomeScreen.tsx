@@ -1,30 +1,87 @@
 import { Href, useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
+import Svg, { Circle, Line, Path, Rect } from "react-native-svg";
 
 import { AppScaffold } from "@/components/layout/AppScaffold";
 import { AppText } from "@/components/ui";
 import { useRequireUser } from "@/shared/navigation/useRequireUser";
 import { useApp } from "@/shared/state/AppProvider";
 
-const moodIcons = ["☂", "◔", "○", "☀", "✦"];
+type FeatureIconName = "anchor" | "book" | "breath" | "journal";
 
 type FeatureCardProps = {
-  icon: string;
+  icon: FeatureIconName;
   title: string;
   hint: string;
   tint: string;
   onPress: () => void;
 };
 
+const iconStroke = {
+  fill: "none",
+  stroke: "#765448",
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  strokeWidth: 1.75,
+};
+
+function FeatureIcon({ name }: { name: FeatureIconName }) {
+  return (
+    <Svg width={42} height={42} viewBox="0 0 48 48" accessibilityElementsHidden>
+      {name === "journal" ? (
+        <>
+          <Rect {...iconStroke} x="9" y="7" width="25" height="34" rx="4" />
+          <Line {...iconStroke} x1="7" y1="14" x2="13" y2="14" />
+          <Line {...iconStroke} x1="7" y1="22" x2="13" y2="22" />
+          <Line {...iconStroke} x1="7" y1="30" x2="13" y2="30" />
+          <Line {...iconStroke} x1="17" y1="17" x2="28" y2="17" />
+          <Line {...iconStroke} x1="17" y1="24" x2="26" y2="24" />
+          <Path {...iconStroke} d="m27 36 3.1-8.1L39 19l4 4-8.9 8.9L27 36Z" />
+          <Line {...iconStroke} x1="35.8" y1="22.2" x2="39.8" y2="26.2" />
+        </>
+      ) : null}
+
+      {name === "breath" ? (
+        <>
+          <Path {...iconStroke} d="M7 18h19c5.8 0 6.3-8 1.1-8-2.8 0-4.3 1.7-4.3 4" />
+          <Path {...iconStroke} d="M5 25h29c6 0 6.4-8.3 1.1-8.3-2.7 0-4.4 1.8-4.4 4" />
+          <Path {...iconStroke} d="M9 32h17c5.8 0 6.3 8 1.1 8-2.8 0-4.3-1.7-4.3-4" />
+        </>
+      ) : null}
+
+      {name === "anchor" ? (
+        <>
+          <Circle {...iconStroke} cx="24" cy="10" r="5" />
+          <Line {...iconStroke} x1="24" y1="15" x2="24" y2="39" />
+          <Line {...iconStroke} x1="17" y1="20" x2="31" y2="20" />
+          <Path {...iconStroke} d="M9 29c2.5 7 7.6 10.5 15 10.5S36.5 36 39 29" />
+          <Path {...iconStroke} d="m6.5 32.5 2.5-4 4 2" />
+          <Path {...iconStroke} d="m41.5 32.5-2.5-4-4 2" />
+        </>
+      ) : null}
+
+      {name === "book" ? (
+        <>
+          <Path {...iconStroke} d="M5 10h4v27H5z" />
+          <Path {...iconStroke} d="M43 10h-4v27h4z" />
+          <Path {...iconStroke} d="M9 8c6.8-1.2 11.8.2 15 4.2V39c-3.2-4-8.2-5.4-15-4.2V8Z" />
+          <Path {...iconStroke} d="M39 8c-6.8-1.2-11.8.2-15 4.2V39c3.2-4 8.2-5.4 15-4.2V8Z" />
+        </>
+      ) : null}
+    </Svg>
+  );
+}
+
 function FeatureCard({ icon, title, hint, tint, onPress }: FeatureCardProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={`${title}. ${hint}`}
       style={({ pressed }) => [styles.featureCard, pressed && styles.pressed]}
       onPress={onPress}
     >
       <View style={[styles.featureIcon, { backgroundColor: tint }]}>
-        <AppText style={styles.featureGlyph}>{icon}</AppText>
+        <FeatureIcon name={icon} />
       </View>
       <View style={styles.featureText}>
         <AppText style={styles.featureTitle}>{title}</AppText>
@@ -38,132 +95,36 @@ function FeatureCard({ icon, title, hint, tint, onPress }: FeatureCardProps) {
 export function HomeScreen() {
   const router = useRouter();
   const { user } = useRequireUser();
-  const {
-    copy,
-    mood,
-    moodHistory,
-    setMood,
-    journalEntries,
-    breathingSessions,
-  } = useApp();
+  const { copy } = useApp();
 
   if (!user) return null;
 
   return (
     <AppScaffold active="home">
-      <View style={styles.greetingBlock}>
-        <AppText style={styles.question}>{copy.home.question}</AppText>
-      </View>
-
-      <View style={styles.moodCard}>
-        <AppText style={styles.moodPrompt}>{copy.home.moodPrompt}</AppText>
-        <View style={styles.moodRow}>
-          {moodIcons.map((icon, index) => {
-            const isSelected = mood === index;
-            const label = copy.home.moods[index];
-
-            return (
-              <Pressable
-                key={icon}
-                accessibilityRole="button"
-                accessibilityLabel={label}
-                accessibilityState={{ selected: isSelected }}
-                style={styles.moodOption}
-                onPress={() => setMood(index)}
-              >
-                <View
-                  style={[
-                    styles.moodIcon,
-                    isSelected && styles.moodIconSelected,
-                  ]}
-                >
-                  <AppText
-                    style={[
-                      styles.moodGlyph,
-                      isSelected && styles.moodGlyphSelected,
-                    ]}
-                  >
-                    {icon}
-                  </AppText>
-                </View>
-                <AppText
-                  numberOfLines={2}
-                  style={[
-                    styles.moodLabel,
-                    isSelected && styles.moodLabelSelected,
-                  ]}
-                >
-                  {label}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </View>
-        {mood !== null ? (
-          <AppText style={styles.savedMessage}>✓ {copy.home.moodSaved}</AppText>
-        ) : null}
-      </View>
-
-      <View style={styles.historyCard}>
-        <AppText style={styles.historyTitle}>{copy.home.moodHistory}</AppText>
-        {moodHistory.length === 0 ? (
-          <AppText style={styles.historyEmpty}>{copy.home.moodHistoryEmpty}</AppText>
-        ) : (
-          <View style={styles.historyRow}>
-            {moodHistory.slice(0, 7).reverse().map((item) => (
-              <View
-                key={item.id}
-                accessible
-                accessibilityLabel={`${item.id}: ${copy.home.moods[item.mood]}`}
-                style={styles.historyItem}
-              >
-                <View style={styles.historyDot}>
-                  <AppText style={styles.historyGlyph}>{moodIcons[item.mood]}</AppText>
-                </View>
-                <AppText style={styles.historyDate}>{item.id.slice(5)}</AppText>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <AppText style={styles.statValue}>{journalEntries.length}</AppText>
-          <AppText style={styles.statLabel}>{copy.home.journalEntries}</AppText>
-        </View>
-        <View style={styles.statCard}>
-          <AppText style={styles.statValue}>{breathingSessions}</AppText>
-          <AppText style={styles.statLabel}>
-            {copy.home.breathingSessions}
-          </AppText>
-        </View>
-      </View>
-
       <View style={styles.featureList}>
         <FeatureCard
-          icon="✎"
+          icon="journal"
           title={copy.home.share}
           hint={copy.home.shareHint}
           tint="#F6D8D5"
           onPress={() => router.push("/journal")}
         />
         <FeatureCard
-          icon="◌"
+          icon="breath"
           title={copy.home.justBe}
           hint={copy.home.justBeHint}
           tint="#D9EDF1"
           onPress={() => router.push("/breathe")}
         />
         <FeatureCard
-          icon="◇"
+          icon="anchor"
           title={copy.home.learn}
           hint={copy.home.learnHint}
           tint="#E7E2F3"
           onPress={() => router.push("/breathe")}
         />
         <FeatureCard
-          icon="♡"
+          icon="book"
           title={copy.home.read}
           hint={copy.home.readHint}
           tint="#F5E7C8"
@@ -175,192 +136,55 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  greetingBlock: {
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  question: {
-    maxWidth: 350,
-    fontFamily: "serif",
-    fontSize: 31,
-    lineHeight: 39,
-    fontWeight: "700",
-    color: "#6F5548",
-  },
-  moodCard: {
-    padding: 18,
-    borderRadius: 26,
-    backgroundColor: "rgba(255,255,255,0.78)",
-    borderWidth: 1,
-    borderColor: "rgba(173,131,116,0.16)",
-  },
-  moodPrompt: {
-    textAlign: "center",
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#876A5D",
-  },
-  moodRow: {
-    marginTop: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 4,
-  },
-  moodOption: {
-    flex: 1,
-    alignItems: "center",
-  },
-  moodIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F6EDE6",
-  },
-  moodIconSelected: {
-    backgroundColor: "#8B6657",
-    transform: [{ scale: 1.06 }],
-  },
-  moodGlyph: {
-    fontSize: 21,
-    color: "#A77B6C",
-  },
-  moodGlyphSelected: {
-    color: "#FFFFFF",
-  },
-  moodLabel: {
-    marginTop: 7,
-    minHeight: 28,
-    textAlign: "center",
-    fontSize: 9,
-    lineHeight: 12,
-    color: "#A38B80",
-  },
-  moodLabelSelected: {
-    fontWeight: "700",
-    color: "#77564A",
-  },
-  savedMessage: {
-    marginTop: 8,
-    textAlign: "center",
-    fontSize: 12,
-    color: "#6E8A73",
-  },
-  historyCard: {
-    marginTop: 14,
-    padding: 15,
-    borderRadius: 21,
-    backgroundColor: "rgba(232, 237, 224, 0.66)",
-  },
-  historyTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#76806F",
-  },
-  historyEmpty: {
-    marginTop: 6,
-    fontSize: 11,
-    color: "#92998A",
-  },
-  historyRow: {
-    marginTop: 11,
-    flexDirection: "row",
-    gap: 8,
-  },
-  historyItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  historyDot: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFFB8",
-  },
-  historyGlyph: {
-    fontSize: 16,
-    color: "#7C7465",
-  },
-  historyDate: {
-    marginTop: 4,
-    fontSize: 8,
-    color: "#8E9386",
-  },
-  statsRow: {
-    marginTop: 14,
-    flexDirection: "row",
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    minHeight: 86,
-    padding: 14,
-    borderRadius: 20,
-    backgroundColor: "rgba(245, 230, 211, 0.72)",
-  },
-  statValue: {
-    fontFamily: "serif",
-    fontSize: 27,
-    fontWeight: "700",
-    color: "#795A4D",
-  },
-  statLabel: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 15,
-    color: "#9A7E71",
-  },
   featureList: {
     marginTop: 18,
-    gap: 11,
+    gap: 16,
   },
   featureCard: {
-    minHeight: 92,
-    padding: 14,
-    borderRadius: 24,
+    minHeight: 116,
+    padding: 16,
+    borderRadius: 27,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.8)",
+    backgroundColor: "rgba(255,255,255,0.86)",
     borderWidth: 1,
     borderColor: "rgba(173,131,116,0.14)",
+    shadowColor: "#8C6B5E",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 2,
   },
   pressed: {
     opacity: 0.78,
     transform: [{ scale: 0.99 }],
   },
   featureIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 20,
+    width: 72,
+    height: 72,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
   },
-  featureGlyph: {
-    fontSize: 24,
-    color: "#765448",
-  },
   featureText: {
     flex: 1,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
   },
   featureTitle: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "700",
-    color: "#71564A",
+    color: "#65483C",
   },
   featureHint: {
-    marginTop: 3,
-    fontSize: 11,
-    lineHeight: 16,
-    color: "#9C857A",
+    marginTop: 5,
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#9C7C6F",
   },
   chevron: {
     marginTop: -3,
-    fontSize: 30,
-    color: "#BDA69B",
+    fontSize: 34,
+    color: "#B68B7C",
   },
 });
