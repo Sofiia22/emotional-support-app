@@ -27,7 +27,7 @@ const iconStroke = {
 
 function FeatureIcon({ name }: { name: FeatureIconName }) {
   return (
-    <Svg width={42} height={42} viewBox="0 0 48 48" accessibilityElementsHidden>
+    <Svg width={36} height={36} viewBox="0 0 48 48" accessibilityElementsHidden>
       {name === "journal" ? (
         <>
           <Rect {...iconStroke} x="9" y="7" width="25" height="34" rx="4" />
@@ -137,13 +137,13 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   featureList: {
-    marginTop: 18,
-    gap: 16,
+    marginTop: 8,
+    gap: 10,
   },
   featureCard: {
-    minHeight: 116,
-    padding: 16,
-    borderRadius: 27,
+    minHeight: 92,
+    padding: 12,
+    borderRadius: 23,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.86)",
@@ -160,31 +160,31 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.99 }],
   },
   featureIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 24,
+    width: 58,
+    height: 58,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
   },
   featureText: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   featureTitle: {
-    fontSize: 18,
-    lineHeight: 23,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: "700",
     color: "#65483C",
   },
   featureHint: {
-    marginTop: 5,
-    fontSize: 13,
-    lineHeight: 19,
+    marginTop: 3,
+    fontSize: 11,
+    lineHeight: 15,
     color: "#9C7C6F",
   },
   chevron: {
     marginTop: -3,
-    fontSize: 34,
+    fontSize: 30,
     color: "#B68B7C",
   },
 });
