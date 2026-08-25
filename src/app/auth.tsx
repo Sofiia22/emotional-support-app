@@ -5,5 +5,11 @@ import { AuthScreen } from "@/features/auth/AuthScreen";
 export default function AuthRoute() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
 
-  return <AuthScreen initialMode={mode === "login" ? "login" : "register"} />;
+  return (
+    <AuthScreen
+      initialMode={
+        mode === "login" ? "login" : mode === "forgot" ? "forgot" : "register"
+      }
+    />
+  );
 }

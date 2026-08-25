@@ -15,7 +15,7 @@ import { LanguageSelector } from "@/components/common/LanguageSelector";
 import { AppText, SoftButton } from "@/components/ui";
 import { useApp } from "@/shared/state/AppProvider";
 
-type AuthMode = "login" | "register";
+type AuthMode = "forgot" | "login" | "register";
 
 export function AuthScreen({ initialMode }: { initialMode: AuthMode }) {
   const router = useRouter();
@@ -26,19 +26,31 @@ export function AuthScreen({ initialMode }: { initialMode: AuthMode }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [resetNotice, setResetNotice] = useState("");
 
   const isRegister = mode === "register";
+  const isForgot = mode === "forgot";
 
   const submit = () => {
     setError("");
+    setResetNotice("");
 
-    if (!email.trim() || !password || (isRegister && (!name.trim() || !confirmPassword))) {
+    if (
+      !email.trim() ||
+      (!isForgot && !password) ||
+      (isRegister && (!name.trim() || !confirmPassword))
+    ) {
       setError(copy.auth.required);
       return;
     }
 
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
       setError(copy.auth.invalidEmail);
+      return;
+    }
+
+    if (isForgot) {
+      setResetNotice(copy.auth.resetDemoNotice);
       return;
     }
 
@@ -88,10 +100,18 @@ export function AuthScreen({ initialMode }: { initialMode: AuthMode }) {
 
           <View style={styles.card}>
             <AppText style={styles.title}>
-              {isRegister ? copy.auth.registerTitle : copy.auth.loginTitle}
+              {isForgot
+                ? copy.auth.resetTitle
+                : isRegister
+                  ? copy.auth.registerTitle
+                  : copy.auth.loginTitle}
             </AppText>
             <AppText style={styles.subtitle}>
-              {isRegister ? copy.auth.registerSubtitle : copy.auth.loginSubtitle}
+              {isForgot
+                ? copy.auth.resetSubtitle
+                : isRegister
+                  ? copy.auth.registerSubtitle
+                  : copy.auth.loginSubtitle}
             </AppText>
 
             <View style={styles.form}>
@@ -117,17 +137,19 @@ export function AuthScreen({ initialMode }: { initialMode: AuthMode }) {
                 value={email}
                 onChangeText={setEmail}
               />
-              <TextInput
-                accessibilityLabel={copy.auth.password}
-                autoCapitalize="none"
-                autoComplete={isRegister ? "new-password" : "current-password"}
-                placeholder={copy.auth.password}
-                placeholderTextColor="#B39C91"
-                secureTextEntry
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-              />
+              {!isForgot ? (
+                <TextInput
+                  accessibilityLabel={copy.auth.password}
+                  autoCapitalize="none"
+                  autoComplete={isRegister ? "new-password" : "current-password"}
+                  placeholder={copy.auth.password}
+                  placeholderTextColor="#B39C91"
+                  secureTextEntry
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+              ) : null}
               {isRegister ? (
                 <TextInput
                   accessibilityLabel={copy.auth.confirmPassword}
@@ -142,14 +164,36 @@ export function AuthScreen({ initialMode }: { initialMode: AuthMode }) {
               ) : null}
 
               {error ? <AppText style={styles.error}>{error}</AppText> : null}
+              {resetNotice ? (
+                <View style={styles.resetNotice}>
+                  <AppText style={styles.resetNoticeText}>{resetNotice}</AppText>
+                </View>
+              ) : null}
 
               <SoftButton
-                title={isRegister ? copy.auth.register : copy.auth.login}
+                title={
+                  isForgot
+                    ? copy.auth.sendReset
+                    : isRegister
+                      ? copy.auth.register
+                      : copy.auth.login
+                }
                 onPress={submit}
               />
 
-              {!isRegister ? (
-                <AppText style={styles.forgot}>{copy.auth.forgot}</AppText>
+              {!isRegister && !isForgot ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={copy.auth.forgot}
+                  hitSlop={10}
+                  onPress={() => {
+                    setError("");
+                    setResetNotice("");
+                    setMode("forgot");
+                  }}
+                >
+                  <AppText style={styles.forgot}>{copy.auth.forgot}</AppText>
+                </Pressable>
               ) : null}
             </View>
 
@@ -158,11 +202,16 @@ export function AuthScreen({ initialMode }: { initialMode: AuthMode }) {
               style={styles.switchButton}
               onPress={() => {
                 setError("");
-                setMode(isRegister ? "login" : "register");
+                setResetNotice("");
+                setMode(isForgot ? "login" : isRegister ? "login" : "register");
               }}
             >
               <AppText style={styles.switchText}>
-                {isRegister ? copy.auth.hasAccount : copy.auth.noAccount}
+                {isForgot
+                  ? copy.auth.backToLogin
+                  : isRegister
+                    ? copy.auth.hasAccount
+                    : copy.auth.noAccount}
               </AppText>
             </Pressable>
 
@@ -303,7 +352,20 @@ const styles = StyleSheet.create({
   forgot: {
     textAlign: "center",
     fontSize: 13,
+    fontWeight: "600",
     color: "#9A7467",
+    textDecorationLine: "underline",
+  },
+  resetNotice: {
+    padding: 12,
+    borderRadius: 14,
+    backgroundColor: "#F1EDE5",
+  },
+  resetNoticeText: {
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#8A776E",
   },
   switchButton: {
     marginTop: 18,
