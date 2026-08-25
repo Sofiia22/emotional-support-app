@@ -52,9 +52,6 @@ export function HomeScreen() {
   return (
     <AppScaffold active="home">
       <View style={styles.greetingBlock}>
-        <AppText style={styles.eyebrow}>
-          {copy.home.greeting}, {user.name}
-        </AppText>
         <AppText style={styles.question}>{copy.home.question}</AppText>
       </View>
 
@@ -182,13 +179,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 20,
   },
-  eyebrow: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#A47768",
-  },
   question: {
-    marginTop: 7,
     maxWidth: 350,
     fontFamily: "serif",
     fontSize: 31,

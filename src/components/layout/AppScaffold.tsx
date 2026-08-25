@@ -1,6 +1,7 @@
 import { Href, useRouter } from "expo-router";
 import { ReactNode, useState } from "react";
 import {
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -10,8 +11,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { LanguageSelector } from "@/components/common/LanguageSelector";
+import { AppNavIcon } from "@/components/layout/AppNavIcon";
 import { AppText, SoftButton } from "@/components/ui";
+import { GrowingPlekaiMark } from "@/features/splash/GrowingPlekaiMark";
 import { useApp } from "@/shared/state/AppProvider";
+
+const taglineImage = require("../../assets/logo/animated/tagline.png");
+const wordmarkImage = require("../../assets/logo/animated/wordmark.png");
 
 export type AppSection = "home" | "journal" | "library" | "breathe" | "support";
 
@@ -26,13 +32,12 @@ type AppScaffoldProps = {
 const navItems: {
   section: AppSection;
   path: "/home" | "/journal" | "/library" | "/breathe" | "/support";
-  icon: string;
 }[] = [
-  { section: "home", path: "/home", icon: "⌂" },
-  { section: "journal", path: "/journal", icon: "✎" },
-  { section: "library", path: "/library", icon: "▤" },
-  { section: "breathe", path: "/breathe", icon: "◌" },
-  { section: "support", path: "/support", icon: "♡" },
+  { section: "home", path: "/home" },
+  { section: "journal", path: "/journal" },
+  { section: "library", path: "/library" },
+  { section: "breathe", path: "/breathe" },
+  { section: "support", path: "/support" },
 ];
 
 export function AppScaffold({
@@ -66,9 +71,27 @@ export function AppScaffold({
       <View style={styles.blueBlob} />
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         <View style={styles.header}>
-          <View>
-            <AppText style={styles.brand}>{copy.common.brand}</AppText>
-            <AppText style={styles.tagline}>{copy.common.tagline}</AppText>
+          <View
+            accessibilityLabel={`${copy.common.brand}. ${copy.common.tagline}.`}
+            style={styles.headerBrand}
+          >
+            <View style={styles.headerMarkViewport}>
+              <View style={styles.headerMarkScale}>
+                <GrowingPlekaiMark reducedMotion />
+              </View>
+            </View>
+            <View style={styles.headerWordmarkBlock}>
+              <Image
+                source={wordmarkImage}
+                resizeMode="contain"
+                style={styles.headerWordmark}
+              />
+              <Image
+                source={taglineImage}
+                resizeMode="contain"
+                style={styles.headerTagline}
+              />
+            </View>
           </View>
           <View style={styles.headerActions}>
             <LanguageSelector compact />
@@ -112,11 +135,10 @@ export function AppScaffold({
                 onPress={() => router.replace(item.path as Href)}
               >
                 <View style={[styles.navIcon, isActive && styles.navIconActive]}>
-                  <AppText
-                    style={[styles.navGlyph, isActive && styles.navGlyphActive]}
-                  >
-                    {item.icon}
-                  </AppText>
+                  <AppNavIcon
+                    section={item.section}
+                    color={isActive ? "#855F50" : "#B89D91"}
+                  />
                 </View>
                 <AppText
                   numberOfLines={1}
@@ -231,18 +253,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  brand: {
-    fontFamily: "serif",
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#6F5548",
+  headerBrand: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  tagline: {
-    marginTop: -2,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    color: "#B9958B",
+  headerMarkViewport: {
+    width: 54,
+    height: 54,
+    overflow: "hidden",
+  },
+  headerMarkScale: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: 330,
+    height: 320,
+    transform: [{ scale: 0.165 }],
+    transformOrigin: "top left",
+  },
+  headerWordmarkBlock: {
+    width: 91,
+    marginLeft: -1,
+  },
+  headerWordmark: {
+    width: 91,
+    height: 32,
+  },
+  headerTagline: {
+    width: 94,
+    height: 31,
+    marginTop: -15,
+    marginLeft: -1,
   },
   headerActions: {
     flexDirection: "row",
@@ -316,14 +357,6 @@ const styles = StyleSheet.create({
   },
   navIconActive: {
     backgroundColor: "#F2D7CF",
-  },
-  navGlyph: {
-    fontSize: 20,
-    lineHeight: 23,
-    color: "#B89D91",
-  },
-  navGlyphActive: {
-    color: "#855F50",
   },
   navLabel: {
     marginTop: 2,
