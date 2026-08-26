@@ -17,11 +17,28 @@ import { MoodCheckIn, upsertMoodCheckIn } from "@/shared/utils/wellbeing";
 
 const STORAGE_KEY = "plekai.app-state.v1";
 
+export type JournalCategory =
+  | "free-thoughts"
+  | "future-self"
+  | "past-self"
+  | "heavenly-conversation"
+  | "letter-to-god";
+
 export type JournalEntry = {
   id: string;
   text: string;
   createdAt: string;
   updatedAt?: string;
+  category?: JournalCategory;
+  recipientName?: string;
+  prompt?: string;
+};
+
+export type NewJournalEntry = {
+  text: string;
+  category: JournalCategory;
+  recipientName?: string;
+  prompt?: string;
 };
 
 export type DailyReminder = {
@@ -58,7 +75,12 @@ type AppContextValue = PersistedState & {
   logout: () => void;
   setMood: (mood: number) => void;
   addJournalEntry: (text: string) => void;
+  addStructuredJournalEntry: (entry: NewJournalEntry) => string;
   updateJournalEntry: (id: string, text: string) => void;
+  updateStructuredJournalEntry: (
+    id: string,
+    entry: Partial<NewJournalEntry>,
+  ) => void;
   deleteJournalEntry: (id: string) => void;
   toggleFavoriteArticle: (id: string) => void;
   setReminder: (reminder: DailyReminder) => void;
@@ -157,12 +179,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ...current.journalEntries,
           ],
         })),
+      addStructuredJournalEntry: (entry) => {
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        setState((current) => ({
+          ...current,
+          journalEntries: [
+            {
+              id,
+              text: entry.text.trim(),
+              category: entry.category,
+              recipientName: entry.recipientName?.trim() || undefined,
+              prompt: entry.prompt,
+              createdAt: new Date().toISOString(),
+            },
+            ...current.journalEntries,
+          ],
+        }));
+        return id;
+      },
       updateJournalEntry: (id, text) =>
         setState((current) => ({
           ...current,
           journalEntries: current.journalEntries.map((item) =>
             item.id === id
               ? { ...item, text: text.trim(), updatedAt: new Date().toISOString() }
+              : item,
+          ),
+        })),
+      updateStructuredJournalEntry: (id, entry) =>
+        setState((current) => ({
+          ...current,
+          journalEntries: current.journalEntries.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  ...(entry.text !== undefined
+                    ? { text: entry.text.trim() }
+                    : null),
+                  ...(entry.category !== undefined
+                    ? { category: entry.category }
+                    : null),
+                  ...(entry.recipientName !== undefined
+                    ? {
+                        recipientName:
+                          entry.recipientName.trim() || undefined,
+                      }
+                    : null),
+                  ...(entry.prompt !== undefined
+                    ? { prompt: entry.prompt }
+                    : null),
+                  updatedAt: new Date().toISOString(),
+                }
               : item,
           ),
         })),
