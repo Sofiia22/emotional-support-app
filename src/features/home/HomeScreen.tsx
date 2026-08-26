@@ -121,7 +121,7 @@ export function HomeScreen() {
           title={copy.home.learn}
           hint={copy.home.learnHint}
           tint="#E7E2F3"
-          onPress={() => router.push("/breathe")}
+          onPress={() => router.push("/support")}
         />
         <FeatureCard
           icon="book"
