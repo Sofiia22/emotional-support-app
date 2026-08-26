@@ -107,7 +107,7 @@ export function HomeScreen() {
           title={copy.home.share}
           hint={copy.home.shareHint}
           tint="#F6D8D5"
-          onPress={() => router.push("/journal")}
+          onPress={() => router.push("/share")}
         />
         <FeatureCard
           icon="breath"
