@@ -41,6 +41,7 @@ export type CommunityVoiceDraft = {
   description: string;
   category: CommunityVoiceCategory;
   localAudioId?: string;
+  localAudioUri?: string;
   createdAt: string;
   updatedAt: string;
 };

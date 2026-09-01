@@ -46,6 +46,8 @@ The documented milestone began in late June 2026 and represents the first functi
 - **React Native** — shared mobile interface implementation;
 - **Expo** — development runtime, mobile platform tooling, build configuration, and device APIs;
 - **Expo Router** — file-based navigation and route organization;
+- **Expo Audio** — cross-platform private voice recording and playback;
+- **Expo FileSystem** — on-device persistence for native audio files;
 - **AsyncStorage** — local persistence for the current development milestone;
 - **React Native Reanimated** — splash and welcome-screen motion;
 - **ESLint** — static code-quality checks.
@@ -92,6 +94,8 @@ The current local data model includes:
 - local user profile;
 - current mood and mood history;
 - journal entries;
+- private voice-journal recordings stored locally on the device;
+- listening progress, saved audio references, and community voice drafts;
 - breathing-session count;
 - saved reading items;
 - reminder preferences;
@@ -214,6 +218,16 @@ The following foundation was completed or functional at the documented milestone
 - iOS, Android, and web-compatible routing;
 - privacy-conscious architecture with no AI or analytics connection;
 - lint, TypeScript, and static web-build validation.
+
+### Post-milestone implementation now present in the repository
+
+- structured private writing journal with categories, editing, search, and deletion;
+- private voice journal with record, pause, resume, preview, save, playback, and deletion;
+- persistent local voice recordings on iOS and Android using Expo Audio and Expo FileSystem;
+- IndexedDB audio persistence for the web version;
+- unified Listen hub with six content libraries, saved items, and listening progress;
+- local Share Your Voice drafts without automatic publishing or server upload;
+- localized Listen and journal experiences in English, Ukrainian, and Russian.
 
 ## Features in Development
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import { AppText, SoftButton } from "@/components/ui";
@@ -7,30 +7,29 @@ import { ListenCopy } from "@/features/listen/listen.copy";
 import { listenStorage, saveCommunityDraftAudio } from "@/features/listen/listen.storage";
 import { CommunityVoiceCategory, CommunityVoiceDraft } from "@/features/listen/listen.types";
 import { useVoiceRecorder } from "@/features/voiceJournal/useVoiceRecorder";
+import { useLocalAudioPlayer } from "@/features/voiceJournal/useLocalAudioPlayer";
 
 const categories: CommunityVoiceCategory[] = ["story", "advice", "faith", "hope"];
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60).toString().padStart(2, "0")}:${Math.floor(seconds % 60).toString().padStart(2, "0")}`;
 
 export function CommunityVoiceForm({ copy, onBack }: { copy: ListenCopy; onBack: () => void }) {
   const recorder = useVoiceRecorder();
+  const playback = useLocalAudioPlayer();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<CommunityVoiceCategory>("story");
   const [draftId] = useState(() => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
-  const [uploaded, setUploaded] = useState<{ blob: Blob; url: string; duration: number } | null>(null);
+  const [uploaded, setUploaded] = useState<{ blob: Blob; uri: string; url: string; duration: number } | null>(null);
   const [drafts, setDrafts] = useState<CommunityVoiceDraft[]>([]);
   const [feedback, setFeedback] = useState("");
-  const [previewPlaying, setPreviewPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => { listenStorage.getDrafts().then(setDrafts); }, []);
   useEffect(() => () => {
-    audioRef.current?.pause();
     if (uploaded) URL.revokeObjectURL(uploaded.url);
   }, [uploaded]);
 
   const audio = recorder.preview
-    ? { blob: recorder.preview.blob, url: recorder.preview.url, duration: recorder.preview.duration }
+    ? { blob: recorder.preview.blob, uri: recorder.preview.uri, url: recorder.preview.url, duration: recorder.preview.duration }
     : uploaded;
 
   const pickAudio = () => {
@@ -48,32 +47,20 @@ export function CommunityVoiceForm({ copy, onBack }: { copy: ListenCopy; onBack:
       recorder.discard();
       const url = URL.createObjectURL(file);
       const probe = new Audio(url);
-      probe.onloadedmetadata = () => setUploaded({ blob: file, url, duration: Number.isFinite(probe.duration) ? probe.duration : 0 });
+      probe.onloadedmetadata = () => setUploaded({ blob: file, uri: url, url, duration: Number.isFinite(probe.duration) ? probe.duration : 0 });
       probe.onerror = () => setFeedback(copy.unavailable);
     };
     input.click();
   };
 
   const togglePreview = async () => {
-    if (!audio || typeof Audio === "undefined") return;
-    if (!audioRef.current) {
-      audioRef.current = new Audio(audio.url);
-      audioRef.current.onended = () => setPreviewPlaying(false);
-    }
-    if (audioRef.current.paused) {
-      await audioRef.current.play();
-      setPreviewPlaying(true);
-    } else {
-      audioRef.current.pause();
-      setPreviewPlaying(false);
-    }
+    if (!audio) return;
+    await playback.toggle("community-preview", audio.url);
   };
 
-  const clearAudio = () => {
-    audioRef.current?.pause();
-    audioRef.current = null;
-    setPreviewPlaying(false);
-    recorder.discard();
+  const clearAudio = async () => {
+    await playback.stop();
+    await recorder.discard();
     if (uploaded) URL.revokeObjectURL(uploaded.url);
     setUploaded(null);
   };
@@ -81,13 +68,16 @@ export function CommunityVoiceForm({ copy, onBack }: { copy: ListenCopy; onBack:
   const saveDraft = async () => {
     const now = new Date().toISOString();
     const existing = drafts.find((item) => item.id === draftId);
-    if (audio && Platform.OS === "web") await saveCommunityDraftAudio(draftId, audio.blob);
+    const localAudioUri = audio
+      ? await saveCommunityDraftAudio(draftId, audio.blob ?? audio.uri)
+      : undefined;
     const draft: CommunityVoiceDraft = {
       id: draftId,
       title: title.trim(),
       description: description.trim(),
       category,
       localAudioId: audio ? draftId : undefined,
+      localAudioUri,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
@@ -116,8 +106,8 @@ export function CommunityVoiceForm({ copy, onBack }: { copy: ListenCopy; onBack:
           <Pressable accessibilityRole="button" style={styles.control} onPress={recorder.state === "paused" ? recorder.resume : recorder.pause}><ListenIcon name={recorder.state === "paused" ? "play" : "pause"} /><AppText style={styles.controlText}>{recorder.state === "paused" ? copy.resumeRecording : copy.pause}</AppText></Pressable>
           <Pressable accessibilityRole="button" style={styles.control} onPress={recorder.stop}><ListenIcon name="stop" /><AppText style={styles.controlText}>{copy.stop}</AppText></Pressable>
         </View> : audio ? <>
-          <Pressable accessibilityRole="button" accessibilityLabel={copy.preview} style={styles.previewButton} onPress={togglePreview}><ListenIcon name={previewPlaying ? "pause" : "play"} /><AppText style={styles.controlText}>{copy.preview}</AppText></Pressable>
-          <View style={styles.recordActions}><Pressable accessibilityRole="button" style={styles.control} onPress={() => { clearAudio(); recorder.start(); }}><AppText style={styles.controlText}>{copy.recordAgain}</AppText></Pressable><Pressable accessibilityRole="button" style={styles.control} onPress={clearAudio}><AppText style={styles.destructive}>{copy.deleteRecording}</AppText></Pressable></View>
+          <Pressable accessibilityRole="button" accessibilityLabel={copy.preview} style={styles.previewButton} onPress={togglePreview}><ListenIcon name={playback.activeKey === "community-preview" && playback.isPlaying ? "pause" : "play"} /><AppText style={styles.controlText}>{copy.preview}</AppText></Pressable>
+          <View style={styles.recordActions}><Pressable accessibilityRole="button" style={styles.control} onPress={async () => { await clearAudio(); await recorder.start(); }}><AppText style={styles.controlText}>{copy.recordAgain}</AppText></Pressable><Pressable accessibilityRole="button" style={styles.control} onPress={clearAudio}><AppText style={styles.destructive}>{copy.deleteRecording}</AppText></Pressable></View>
         </> : <View style={styles.recordActions}><Pressable accessibilityRole="button" style={styles.control} onPress={recorder.start}><ListenIcon name="mic" /><AppText style={styles.controlText}>{copy.record}</AppText></Pressable><Pressable accessibilityRole="button" style={styles.control} onPress={pickAudio}><AppText style={styles.controlText}>{copy.uploadAudio}</AppText></Pressable></View>}
         {recorder.problem ? <AppText style={styles.feedback}>{copy.unavailableText}</AppText> : null}
       </View>

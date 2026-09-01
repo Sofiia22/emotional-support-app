@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Directory, File, Paths } from "expo-file-system";
+import { Platform } from "react-native";
 
 import { AudioProgress, CommunityVoiceDraft, SavedAudio } from "@/features/listen/listen.types";
 
@@ -66,16 +68,29 @@ function openDraftDatabase(): Promise<IDBDatabase> {
   });
 }
 
-export async function saveCommunityDraftAudio(id: string, blob: Blob) {
+export async function saveCommunityDraftAudio(id: string, audio: Blob | string) {
+  if (Platform.OS !== "web") {
+    if (typeof audio !== "string") throw new Error("A native recording URI is required");
+    const directory = new Directory(Paths.document, "community-voice-drafts");
+    if (!directory.exists) directory.create({ idempotent: true, intermediates: true });
+    const extension = audio.match(/\.[a-z0-9]+(?:\?|$)/i)?.[0]?.replace("?", "") || ".m4a";
+    const destination = new File(directory, `${id}${extension}`);
+    if (destination.exists) destination.delete();
+    const source = new File(audio);
+    source.copy(destination);
+    return destination.uri;
+  }
+  if (typeof audio === "string") throw new Error("A web audio Blob is required");
   const database = await openDraftDatabase();
   try {
     await new Promise<void>((resolve, reject) => {
       const transaction = database.transaction(DRAFT_AUDIO_STORE, "readwrite");
-      transaction.objectStore(DRAFT_AUDIO_STORE).put({ id, blob });
+      transaction.objectStore(DRAFT_AUDIO_STORE).put({ id, blob: audio });
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
     });
   } finally {
     database.close();
   }
+  return undefined;
 }

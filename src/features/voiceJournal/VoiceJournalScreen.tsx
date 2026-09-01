@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { AppScaffold } from "@/components/layout/AppScaffold";
@@ -14,6 +8,7 @@ import { useRequireUser } from "@/shared/navigation/useRequireUser";
 import { useApp } from "@/shared/state/AppProvider";
 import { SoftWaveform } from "@/features/voiceJournal/SoftWaveform";
 import { useVoiceRecorder } from "@/features/voiceJournal/useVoiceRecorder";
+import { useLocalAudioPlayer } from "@/features/voiceJournal/useLocalAudioPlayer";
 import { VoiceJournalIcon } from "@/features/voiceJournal/VoiceJournalIcon";
 import {
   deleteVoiceRecording,
@@ -54,21 +49,14 @@ export function VoiceJournalScreen() {
   const { user } = useRequireUser();
   const { copy, language } = useApp();
   const recorder = useVoiceRecorder();
+  const playback = useLocalAudioPlayer();
   const [recordings, setRecordings] = useState<VoiceRecording[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [savedPlaying, setSavedPlaying] = useState(false);
-  const [playbackPosition, setPlaybackPosition] = useState(0);
-  const [playbackDuration, setPlaybackDuration] = useState(0);
-  const [previewPlaying, setPreviewPlaying] = useState(false);
-  const [previewPosition, setPreviewPosition] = useState(0);
-  const savedAudioRef = useRef<HTMLAudioElement | null>(null);
   const savedAudioUrlRef = useRef<string | null>(null);
-  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const locale = localeByLanguage[language];
   const titleFormatter = useMemo(
@@ -83,10 +71,6 @@ export function VoiceJournalScreen() {
   );
 
   const loadRecordings = useCallback(async () => {
-    if (Platform.OS !== "web") {
-      setIsLoading(false);
-      return;
-    }
     try {
       setRecordings(await listVoiceRecordings());
     } finally {
@@ -98,46 +82,8 @@ export function VoiceJournalScreen() {
     loadRecordings().catch(() => setIsLoading(false));
   }, [loadRecordings]);
 
-  const stopSavedAudio = useCallback(() => {
-    const audio = savedAudioRef.current;
-    if (audio) {
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
-    }
-    if (savedAudioUrlRef.current) URL.revokeObjectURL(savedAudioUrlRef.current);
-    savedAudioRef.current = null;
-    savedAudioUrlRef.current = null;
-    setPlayingId(null);
-    setSavedPlaying(false);
-    setPlaybackPosition(0);
-    setPlaybackDuration(0);
-  }, []);
-
-  const stopPreviewAudio = useCallback(() => {
-    const audio = previewAudioRef.current;
-    if (audio) {
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
-    }
-    previewAudioRef.current = null;
-    setPreviewPlaying(false);
-    setPreviewPosition(0);
-  }, []);
-
   useEffect(
     () => () => {
-      const savedAudio = savedAudioRef.current;
-      if (savedAudio) {
-        savedAudio.pause();
-        savedAudio.removeAttribute("src");
-      }
-      const previewAudio = previewAudioRef.current;
-      if (previewAudio) {
-        previewAudio.pause();
-        previewAudio.removeAttribute("src");
-      }
       if (savedAudioUrlRef.current) URL.revokeObjectURL(savedAudioUrlRef.current);
     },
     [],
@@ -145,64 +91,30 @@ export function VoiceJournalScreen() {
 
   if (!user) return null;
 
-  const togglePreview = () => {
-    if (!recorder.preview || typeof Audio === "undefined") return;
-    stopSavedAudio();
-
-    if (previewAudioRef.current) {
-      if (previewAudioRef.current.paused) {
-        previewAudioRef.current.play().catch(() => undefined);
-        setPreviewPlaying(true);
-      } else {
-        previewAudioRef.current.pause();
-        setPreviewPlaying(false);
-      }
-      return;
-    }
-
-    const audio = new Audio(recorder.preview.url);
-    previewAudioRef.current = audio;
-    audio.ontimeupdate = () => setPreviewPosition(audio.currentTime);
-    audio.onended = () => {
-      setPreviewPlaying(false);
-      setPreviewPosition(0);
-      audio.currentTime = 0;
-    };
-    audio.play().then(() => setPreviewPlaying(true)).catch(() => setPreviewPlaying(false));
+  const togglePreview = async () => {
+    if (!recorder.preview) return;
+    await playback.toggle("preview", recorder.preview.url);
   };
 
   const toggleSavedRecording = async (recording: VoiceRecording) => {
-    stopPreviewAudio();
-
-    if (playingId === recording.id && savedAudioRef.current) {
-      if (savedAudioRef.current.paused) {
-        await savedAudioRef.current.play();
-        setSavedPlaying(true);
-      } else {
-        savedAudioRef.current.pause();
-        setSavedPlaying(false);
-      }
+    const key = `saved:${recording.id}`;
+    if (playback.activeKey === key) {
+      const currentSource = savedAudioUrlRef.current || recording.uri;
+      if (currentSource) await playback.toggle(key, currentSource);
       return;
     }
 
-    stopSavedAudio();
-    const blob = await getVoiceRecordingAudio(recording.id);
-    if (!blob || typeof Audio === "undefined") return;
-
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    savedAudioRef.current = audio;
-    savedAudioUrlRef.current = url;
-    audio.ontimeupdate = () => {
-      setPlaybackPosition(audio.currentTime);
-      setPlaybackDuration(audio.duration || recording.duration);
-    };
-    audio.onended = () => stopSavedAudio();
-    audio.onerror = () => stopSavedAudio();
-    await audio.play();
-    setPlayingId(recording.id);
-    setSavedPlaying(true);
-    setPlaybackDuration(recording.duration);
+    if (savedAudioUrlRef.current && Platform.OS === "web") {
+      URL.revokeObjectURL(savedAudioUrlRef.current);
+      savedAudioUrlRef.current = null;
+    }
+    const storedAudio = await getVoiceRecordingAudio(recording);
+    if (!storedAudio) return;
+    const source = typeof storedAudio === "string"
+      ? storedAudio
+      : URL.createObjectURL(storedAudio);
+    if (typeof storedAudio !== "string") savedAudioUrlRef.current = source;
+    await playback.toggle(key, source);
   };
 
   const savePreview = async () => {
@@ -219,10 +131,11 @@ export function VoiceJournalScreen() {
     };
 
     try {
-      await saveVoiceRecording(recording, recorder.preview.blob);
-      stopPreviewAudio();
-      recorder.discard();
-      setRecordings((current) => [recording, ...current]);
+      const audio = recorder.preview.blob ?? recorder.preview.uri;
+      const persisted = await saveVoiceRecording(recording, audio);
+      await playback.stop();
+      await recorder.discard();
+      setRecordings((current) => [persisted, ...current]);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2400);
     } finally {
@@ -236,16 +149,16 @@ export function VoiceJournalScreen() {
     if (!action) return;
 
     if (action.type === "delete-saved") {
-      if (playingId === action.recording.id) stopSavedAudio();
+      if (playback.activeKey === `saved:${action.recording.id}`) await playback.stop();
       await deleteVoiceRecording(action.recording.id);
       setRecordings((current) => current.filter((item) => item.id !== action.recording.id));
       setMenuId(null);
       return;
     }
 
-    stopPreviewAudio();
-    recorder.discard();
-    if (action.type === "replace") recorder.start();
+    await playback.stop();
+    await recorder.discard();
+    if (action.type === "replace") await recorder.start();
   };
 
   const isRecording = recorder.state === "recording";
@@ -313,17 +226,17 @@ export function VoiceJournalScreen() {
             <View style={styles.previewBlock}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={previewPlaying ? copy.voiceJournal.pausePreview : copy.voiceJournal.playPreview}
+                accessibilityLabel={playback.activeKey === "preview" && playback.isPlaying ? copy.voiceJournal.pausePreview : copy.voiceJournal.playPreview}
                 style={styles.previewPlayButton}
                 onPress={togglePreview}
               >
-                <VoiceJournalIcon name={previewPlaying ? "pause" : "play"} size={30} />
+                <VoiceJournalIcon name={playback.activeKey === "preview" && playback.isPlaying ? "pause" : "play"} size={30} />
               </Pressable>
               <AppText style={styles.timer}>
                 {formatDuration(recorder.preview?.duration ?? 0)}
               </AppText>
               <ProgressLine
-                progress={previewPosition / Math.max(recorder.preview?.duration ?? 0, 1)}
+                progress={playback.activeKey === "preview" ? playback.currentTime / Math.max(playback.duration || recorder.preview?.duration || 0, 1) : 0}
               />
               <AppText style={styles.previewLabel}>{copy.voiceJournal.previewReady}</AppText>
             </View>
@@ -416,9 +329,9 @@ export function VoiceJournalScreen() {
           ) : (
             <View style={styles.recordingList}>
               {recordings.map((recording) => {
-                const isPlaying = playingId === recording.id && savedPlaying;
-                const progress = isPlaying
-                  ? playbackPosition / Math.max(playbackDuration || recording.duration, 1)
+                const isPlaying = playback.activeKey === `saved:${recording.id}` && playback.isPlaying;
+                const progress = playback.activeKey === `saved:${recording.id}`
+                  ? playback.currentTime / Math.max(playback.duration || recording.duration, 1)
                   : 0;
                 return (
                   <View key={recording.id} style={styles.recordingRow}>
